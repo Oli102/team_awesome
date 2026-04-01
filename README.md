@@ -18,3 +18,9 @@
 **Response Lead** — owns response.js and style.css. Responsible for the visual, sonic, or behavioral output when states change. This person makes the system's interpretation visible to the viewer.
 
 **Integration Lead** — owns sketch.js, index.html, and the README. Responsible for the p5.js draw loop, camera initialization, ml5 setup, and ensuring all layers connect. Also maintains documentation and the calibration log.
+
+## Calibration Log
+
+### State Engine Setup (AJ)
+- Signal mapping logic ready
+- Threshold and timing configuration initialized
