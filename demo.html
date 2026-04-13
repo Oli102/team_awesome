@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presenter Coach — Demonstration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #030303;
+      --off-black: #0a0a0a;
+      --panel: #111111;
+      --border: #1e1e1e;
+      --cyan: #00d4ff;
+      --cyan-dim: rgba(0, 212, 255, 0.12);
+      --red: #ff3c3c;
+      --text: #d0d0d0;
+      --text-dim: #555;
+      --text-mid: #888;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── SCANLINE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.08) 2px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── HEADER ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 28px 60px;
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      background: rgba(3,3,3,0.92);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .wordmark {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 6px;
+      color: var(--cyan);
+    }
+
+    .header-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    nav {
+      margin-left: auto;
+      display: flex;
+      gap: 32px;
+    }
+
+    nav a {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--cyan); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 100px 60px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(64px, 8vw, 110px);
+      line-height: 0.92;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 30px;
+    }
+
+    .hero-title span {
+      color: var(--cyan);
+    }
+
+    .hero-body {
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--text-mid);
+      max-width: 420px;
+      margin-bottom: 36px;
+    }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--cyan);
+      color: #000;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    .btn-ghost {
+      display: inline-block;
+      border: 1px solid var(--border);
+      color: var(--text-mid);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 14px 28px;
+      text-decoration: none;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    .webcam-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      margin-top: 12px;
+    }
+
+    .hero-visual {
+      position: relative;
+    }
+
+    /* Diagram of the 4 metrics */
+    .metric-diagram {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .metric-card {
+      border: 1px solid var(--border);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(16px);
+      animation: fadeUp 0.5s forwards;
+    }
+
+    .metric-card:nth-child(1) { animation-delay: 0.1s; }
+    .metric-card:nth-child(2) { animation-delay: 0.2s; }
+    .metric-card:nth-child(3) { animation-delay: 0.3s; }
+    .metric-card:nth-child(4) { animation-delay: 0.4s; }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .metric-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: var(--cyan);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s;
+    }
+
+    .metric-card:hover::after { transform: scaleX(1); }
+
+    .metric-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      color: var(--cyan);
+      line-height: 1;
+    }
+
+    .metric-desc {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 6px;
+      line-height: 1.5;
+    }
+
+    /* ── SECTION SHELL ── */
+    .section {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 80px 60px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 48px;
+      letter-spacing: 2px;
+      color: #fff;
+      margin-bottom: 40px;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .loop-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+    }
+
+    .loop-step {
+      background: var(--panel);
+      padding: 36px 28px;
+      position: relative;
+    }
+
+    .loop-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 72px;
+      color: var(--border);
+      line-height: 1;
+      margin-bottom: 16px;
+      transition: color 0.3s;
+    }
+
+    .loop-step:hover .loop-num { color: var(--cyan-dim); }
+
+    .loop-step-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .loop-step-body {
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-mid);
+    }
+
+    .loop-arrow {
+      position: absolute;
+      right: -14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      background: var(--black);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      font-size: 12px;
+      color: var(--cyan);
+    }
+
+    /* ── CONTROL TABLE ── */
+    .control-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .control-table thead tr {
+      border-bottom: 1px solid var(--cyan);
+    }
+
+    .control-table th {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 400;
+    }
+
+    .control-table td {
+      padding: 18px 16px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    .control-table tr:hover td {
+      background: rgba(0,212,255,0.03);
+    }
+
+    .state-tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 4px 10px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    .tag-good { background: rgba(0,212,255,0.12); color: var(--cyan); }
+    .tag-warn { background: rgba(255,180,0,0.1); color: #ffb400; }
+    .tag-bad  { background: rgba(255,60,60,0.12); color: var(--red); }
+
+    .threshold-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 3px;
+      background: var(--border);
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--cyan);
+    }
+
+    .bar-fill.warn { background: #ffb400; }
+    .bar-fill.bad  { background: var(--red); }
+
+    .bar-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--text-dim);
+      min-width: 30px;
+      text-align: right;
+    }
+
+    /* ── DIPTYCH ── */
+    .diptych-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+    }
+
+    .diptych-panel {
+      padding: 48px 40px;
+      position: relative;
+    }
+
+    .diptych-panel.active {
+      background: var(--panel);
+      border-left: 3px solid var(--cyan);
+    }
+
+    .diptych-panel.opposite {
+      background: rgba(255,255,255,0.02);
+      border-left: 3px solid #222;
+    }
+
+    .diptych-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .diptych-panel.active .diptych-tag { color: var(--cyan); }
+    .diptych-panel.opposite .diptych-tag { color: var(--text-dim); }
+
+    .diptych-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 52px;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      line-height: 1;
+    }
+
+    .diptych-panel.active .diptych-heading { color: #fff; }
+    .diptych-panel.opposite .diptych-heading { color: #333; }
+
+    .diptych-body {
+      font-size: 14px;
+      line-height: 1.9;
+      color: var(--text-mid);
+    }
+
+    .diptych-panel.opposite .diptych-body { color: #3a3a3a; }
+
+    .diptych-statement {
+      margin-top: 48px;
+      padding: 40px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .diptych-statement p {
+      font-size: 15px;
+      line-height: 2;
+      color: var(--text-mid);
+      max-width: 780px;
+    }
+
+    .diptych-statement p + p {
+      margin-top: 16px;
+    }
+
+    /* ── DEMO EMBED ── */
+    .demo-wrapper {
+      border: 1px solid var(--border);
+      position: relative;
+      background: #000;
+      overflow: hidden;
+    }
+
+    .demo-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--panel);
+    }
+
+    .demo-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .demo-url {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 8px;
+    }
+
+    .demo-iframe-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 60%;
+    }
+
+    .demo-iframe-container iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .demo-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      background: #000;
+    }
+
+    .demo-placeholder-icon {
+      font-size: 48px;
+      opacity: 0.2;
+    }
+
+    .demo-placeholder-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .demo-link-large {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--cyan);
+      color: #000;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 16px 32px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    .demo-link-large:hover { opacity: 0.85; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 40px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .footer-left {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    .footer-right {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes pulse-border {
+      0%, 100% { border-color: var(--border); }
+      50% { border-color: rgba(0,212,255,0.3); }
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--cyan);
+      text-transform: uppercase;
+    }
+
+    .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: blink 1.4s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      header { padding: 20px 24px; }
+      nav { display: none; }
+      .hero { grid-template-columns: 1fr; padding: 60px 24px 48px; }
+      .section { padding: 60px 24px; }
+      .loop-grid { grid-template-columns: 1fr; }
+      .loop-arrow { display: none; }
+      .diptych-grid { grid-template-columns: 1fr; }
+      footer { flex-direction: column; gap: 12px; padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="wordmark">PRESENTER COACH</div>
+    <div class="header-sub">Sensor Layer / team_awesome</div>
+    <nav>
+      <a href="#how-it-works">System</a>
+      <a href="#control-table">Control Language</a>
+      <a href="#demo">Demo</a>
+      <a href="#diptych">Diptych</a>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <div style="border-bottom: 1px solid var(--border);">
+    <div class="hero">
+      <div>
+        <div class="hero-eyebrow">The Sensor Layer — Module 03</div>
+        <h1 class="hero-title">WHAT<br>DOES IT<br>MEAN TO<br><span>SEE?</span></h1>
+        <p class="hero-body">
+          A system that watches how you present. It reads your posture, your gaze, your hands, your position — and turns that into a real-time score. The camera is the judge.
+        </p>
+        <div class="cta-group">
+          <a href="#demo" class="btn-primary">→ Open Live Demo</a>
+          <a href="#control-table" class="btn-ghost">Control Language</a>
+        </div>
+        <p class="webcam-note">⚠ Requires webcam access. Best used in a well-lit space.</p>
+      </div>
+
+      <div class="hero-visual">
+        <div class="metric-diagram">
+          <div class="metric-card">
+            <div class="metric-label">Posture</div>
+            <div class="metric-value">01</div>
+            <div class="metric-desc">Shoulder height relative to nose. Upright = passing.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Eye Contact</div>
+            <div class="metric-value">02</div>
+            <div class="metric-desc">Ear-to-nose ratio detects head turns away from camera.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Gesticulation</div>
+            <div class="metric-value">03</div>
+            <div class="metric-desc">Wrist velocity. Expressive movement builds score; stillness decays it.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Presence</div>
+            <div class="metric-value">04</div>
+            <div class="metric-desc">Nose X-position. Stay centered in the frame.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section" id="how-it-works">
+    <div class="section-label">Sensing Loop</div>
+    <div class="section-title">WATCH → INTERPRET → RESPOND</div>
+    <div class="loop-grid">
+      <div class="loop-step" style="position:relative;">
+        <div class="loop-num">01</div>
+        <div class="loop-step-title">Watch</div>
+        <div class="loop-step-body">
+          BlazePose (via ml5.js) runs on every webcam frame. It extracts 33 body keypoints — nose, ears, shoulders, elbows, wrists — each with an X, Y, and confidence score. Only keypoints above 0.2 confidence are trusted.
+        </div>
+        <div class="loop-arrow">→</div>
+      </div>
+      <div class="loop-step" style="position:relative;">
+        <div class="loop-num">02</div>
+        <div class="loop-step-title">Interpret</div>
+        <div class="loop-step-body">
+          <code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan);">detection.js</code> runs four calculations per frame: shoulder-to-nose distance (posture), ear-to-nose ratio (gaze), wrist velocity delta (hands), and nose X-drift (centering). Each produces a raw signal score.
+          <br><br>
+          <code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan);">stateEngine.js</code> integrates those signals over time into four 0–100 gauges using a decay rate of 0.98 and a fill rate of ±2 per frame. This smooths noise and prevents flickering.
+        </div>
+        <div class="loop-arrow">→</div>
+      </div>
+      <div class="loop-step">
+        <div class="loop-num">03</div>
+        <div class="loop-step-title">Respond</div>
+        <div class="loop-step-body">
+          <code style="font-family:'DM Mono',monospace;font-size:11px;color:var(--cyan);">response.js</code> renders four arc gauges over the mirrored video feed. A centered status bar shows a priority message: the worst current failure gets named first. A ghost skeleton overlays the optimal body position.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROL LANGUAGE TABLE -->
+  <div class="section" id="control-table">
+    <div class="section-label">Control Language</div>
+    <div class="section-title">STATES, LOGIC, RESPONSES</div>
+
+    <table class="control-table">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>State</th>
+          <th>Detection Logic</th>
+          <th>Threshold</th>
+          <th>System Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- POSTURE -->
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:#fff;">POSTURE</span></td>
+          <td><span class="state-tag tag-good">Upright</span></td>
+          <td>Vertical distance from nose to shoulder midpoint &gt; 130px</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill" style="width:70%"></div></div>
+              <span class="bar-label">&gt;130px</span>
+            </div>
+          </td>
+          <td>Posture gauge climbs +2/frame toward 100</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-bad">Slouching</span></td>
+          <td>Vertical distance from nose to shoulder midpoint ≤ 130px</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill bad" style="width:30%"></div></div>
+              <span class="bar-label">≤130px</span>
+            </div>
+          </td>
+          <td>Gauge drops −2/frame. Below 30: "FIX POSTURE: STAND TALL"</td>
+        </tr>
+        <!-- EYE CONTACT -->
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:#fff;">EYE CONTACT</span></td>
+          <td><span class="state-tag tag-good">On Camera</span></td>
+          <td>Max ear-to-nose dist / min ear-to-nose dist ≤ 2.2</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill" style="width:65%"></div></div>
+              <span class="bar-label">≤2.2×</span>
+            </div>
+          </td>
+          <td>Eye contact gauge climbs +2/frame</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-warn">Looking Away</span></td>
+          <td>Ear ratio &gt; 2.2 (head turned left or right)</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill warn" style="width:50%"></div></div>
+              <span class="bar-label">&gt;2.2×</span>
+            </div>
+          </td>
+          <td>Gauge drops −2/frame</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-bad">Back Turned</span></td>
+          <td>Nose confidence &lt; 0.2 (face not detected)</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill bad" style="width:15%"></div></div>
+              <span class="bar-label">&lt;0.2 conf</span>
+            </div>
+          </td>
+          <td>Gauge drops −4/frame. Below 30: "LOOK AT THE AUDIENCE"</td>
+        </tr>
+        <!-- GESTICULATION -->
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:#fff;">GESTICULATION</span></td>
+          <td><span class="state-tag tag-good">Expressive</span></td>
+          <td>Avg wrist velocity &gt; 20px/frame (high) or &gt;12 (medium) or &gt;6 (low); hands above pocket zone</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+              <span class="bar-label">&gt;6px/f</span>
+            </div>
+          </td>
+          <td>Score +1, +2, or +3/frame depending on speed tier</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-warn">Still</span></td>
+          <td>Wrists moving &lt; 6px/frame or not visible</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill warn" style="width:25%"></div></div>
+              <span class="bar-label">×0.98/f</span>
+            </div>
+          </td>
+          <td>Score decays ×0.98/frame (natural fade)</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-bad">Hands Hidden</span></td>
+          <td>Both wrists below shoulder_y + 220px or confidence &lt; 0.2</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill bad" style="width:20%"></div></div>
+              <span class="bar-label">−2/frame</span>
+            </div>
+          </td>
+          <td>Score −2/frame + "KEEP HANDS VISIBLE" message</td>
+        </tr>
+        <!-- PRESENCE -->
+        <tr>
+          <td><span style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:2px;color:#fff;">PRESENCE</span></td>
+          <td><span class="state-tag tag-good">Centered</span></td>
+          <td>Nose X within 100px of frame center (400px)</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill" style="width:60%"></div></div>
+              <span class="bar-label">±100px</span>
+            </div>
+          </td>
+          <td>Presence gauge climbs +2/frame</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td><span class="state-tag tag-bad">Off-Center</span></td>
+          <td>Nose X drift &gt; 100px from center</td>
+          <td>
+            <div class="threshold-bar">
+              <div class="bar-track"><div class="bar-fill bad" style="width:35%"></div></div>
+              <span class="bar-label">&gt;100px</span>
+            </div>
+          </td>
+          <td>Gauge drops −2/frame</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- LIVE DEMO -->
+  <div class="section" id="demo">
+    <div class="section-label">Live Prototype</div>
+    <div class="section-title">SIT IN FRONT OF THE CAMERA</div>
+    <p style="font-size:14px;color:var(--text-mid);margin-bottom:32px;line-height:1.8;max-width:640px;">
+      The demo runs in your browser using your webcam. BlazePose processes video locally — nothing is sent to a server. Allow camera access when prompted. Works best seated, well-lit, with your upper body visible.
+    </p>
+
+    <div class="demo-wrapper">
+      <div class="demo-header">
+        <div class="demo-dot dot-red"></div>
+        <div class="demo-dot dot-yellow"></div>
+        <div class="demo-dot dot-green"></div>
+        <span class="demo-url">team_awesome — Presenter Coach</span>
+        <span style="margin-left:auto;"><span class="live-indicator"><span class="live-dot"></span>Live</span></span>
+      </div>
+      <div style="padding:48px;display:flex;flex-direction:column;align-items:center;gap:20px;background:#000;min-height:240px;justify-content:center;">
+        <div style="font-size:40px;opacity:0.15;">📷</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;">Deployed Prototype</div>
+        <a href="https://oli102.github.io/team_awesome" target="_blank" class="demo-link-large">
+          → Launch Presenter Coach
+        </a>
+        <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);letter-spacing:1px;text-align:center;">Opens in a new tab — webcam required</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIPTYCH -->
+  <div class="section" id="diptych">
+    <div class="section-label">Diptych Framing</div>
+    <div class="section-title">PRESSURE / POSSIBILITY</div>
+
+    <div class="diptych-grid">
+      <div class="diptych-panel active">
+        <div class="diptych-tag">← This System</div>
+        <div class="diptych-heading">PRESSURE</div>
+        <div class="diptych-body">
+          Presenter Coach lives on the pressure pole. It watches you constantly, scores you against a fixed behavioral ideal, and names your failures in real time. The gauge dropping is a verdict. The message bar telling you to "FIX YOUR POSTURE" is a command. The camera is not neutral — it is a standard you are expected to meet.
+          <br><br>
+          Being watched by this system feels like being evaluated. The ghost skeleton overlaid on your body is the shape you're supposed to be.
+        </div>
+      </div>
+      <div class="diptych-panel opposite">
+        <div class="diptych-tag">The Other Pole →</div>
+        <div class="diptych-heading">POSSIBILITY</div>
+        <div class="diptych-body">
+          The opposite system would not measure you against an ideal. It would watch for what is interesting: unexpected movement, stillness that reads as contemplation, asymmetry that feels intentional. It would not score you — it would reflect you. Sitting in front of that system would feel less like an audition and more like being seen.
+        </div>
+      </div>
+    </div>
+
+    <div class="diptych-statement">
+      <p>
+        This system is built on the premise that good presenting has a correct form — that posture, gaze, gesture, and centering can be measured against an optimal and found wanting. That premise is not neutral. Every threshold in <code style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cyan);">config.js</code> is a value judgment rendered as a number.
+      </p>
+      <p>
+        To build the opposite pole would require dismantling that premise entirely. The camera would stay; the scoring would go. What remains is a different question: not <em>"are you performing correctly?"</em> but <em>"what are you actually doing, and is that worth watching?"</em>
+      </p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">team_awesome — Sensor Layer Project — 2026</div>
+    <div class="footer-right">John · AJ · Grant · Oliver</div>
+  </footer>
+
+</body>
+</html>
